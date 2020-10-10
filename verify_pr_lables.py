@@ -4,7 +4,7 @@ import os
 import sys
 import re
 from github import Github
-import oneflow
+
 
 parser = argparse.ArgumentParser()
 
