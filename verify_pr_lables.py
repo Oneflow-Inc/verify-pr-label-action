@@ -78,14 +78,16 @@ def check_labels(pr_labels, required_labels_set):
         if label.name in splits:
             pr_valid_labels.append(label.name)
 
-    if len(pr_valid_labels) == 0:
-        print(f"at least add one of the following labels: `{required_labels_set}`")
-        is_satisfied = False
+    if len(pr_valid_labels):
+        return True
+    else:
+        print(f"at least add one of these labels: `{required_labels_set}`")
+        return False
 
 
 required_labels_sets = args.required_labels
 for required_labels_set in required_labels_sets:
-    check_labels(pr_labels, required_labels_set)
+    is_satisfied = check_labels(pr_labels, required_labels_set)
 
 if is_satisfied == False:
     raise ValueError("Check fails")
