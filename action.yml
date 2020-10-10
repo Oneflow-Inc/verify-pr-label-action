@@ -18,6 +18,6 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - --github_token="${{ inputs.github-token }}"
-    - --required_labels="${{ required-type-labels }}"
-    - --required_labels="${{ required-component-labels }}"
+    - --github_token=${{ inputs.github-token }}
+    - --required_labels=${{ inputs.required-type-labels }}
+    - --required_labels=${{ inputs.required-component-labels }}
