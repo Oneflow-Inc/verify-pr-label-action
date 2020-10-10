@@ -8,12 +8,16 @@ inputs:
   github-token:
     description: 'The GitHub token'
     required: true
-  valid-labels:
-    description: 'List of valid labels'
+  required-type-labels:
+    description: 'label for type of PR. for instance bugfix'
+    required: true
+  required-component-labels:
+    description: 'label for which component a PR is related. for instance OP'
     required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.github-token }}
-    - ${{ inputs.valid-labels }}
+    - --github_token ${{ inputs.github-token }}
+    - --required_labels ${{ required-type-labels }}
+    - --required_labels ${{ required-component-labels }}

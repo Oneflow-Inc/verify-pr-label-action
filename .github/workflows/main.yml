@@ -5,7 +5,7 @@ on:
 jobs:
   check_pr_labels:
     runs-on: ubuntu-latest
-    name: Verify that the PR has a valid label
+    name: Verify that the PR has labels
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -14,4 +14,5 @@ jobs:
         id: verify-pr-label
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          valid-labels: 'bug, enhancement'
+          required-type-labels: 'bug, enhancement, purge, feature'
+          required-component-labels: 'op, system, eager, build, xla, python, ci, test, tooling'

@@ -4,6 +4,14 @@ import os
 import sys
 import re
 from github import Github
+import oneflow
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--github_token", type=str, required=True)
+parser.add_argument("--required_labels", action="append", nargs="+")
+args = parser.parse_args()
+
 
 def get_env_var(env_var_name, echo_value=False):
     """Try to get the value from a environmental variable.
@@ -18,40 +26,37 @@ def get_env_var(env_var_name, echo_value=False):
     Returns:
         string: the value from the environmental variable.
     """
-    value=os.environ.get(env_var_name)
+    value = os.environ.get(env_var_name)
 
     if value == None:
-        raise ValueError(f'The environmental variable {env_var_name} is empty!')
+        raise ValueError(f"The environmental variable {env_var_name} is empty!")
 
     if echo_value:
         print(f"{env_var_name} = {value}")
 
     return value
 
-# Check if the number of input arguments is correct
-if len(sys.argv) != 3:
-    raise ValueError('Invalid number of arguments!')
 
 # Get the GitHub token
-token=sys.argv[1]
+token = args.github_token
 
 # Get the list of valid labels
-valid_labels=sys.argv[2]
-print(f'Valid labels are: {valid_labels}')
 
-# Get needed values from the environmental variables
-repo_name=get_env_var('GITHUB_REPOSITORY')
-github_ref=get_env_var('GITHUB_REF')
+for s in required_labels_sets:
+    print(f"required at least one of: {s}")
 
-# Create a repository object, using the GitHub token
+repo_name = get_env_var("GITHUB_REPOSITORY")
+github_ref = get_env_var("GITHUB_REF")
 repo = Github(token).get_repo(repo_name)
 
 # Try to extract the pull request number from the GitHub reference.
 try:
-    pr_number=int(re.search('refs/pull/([0-9]+)/merge', github_ref).group(1))
-    print(f'Pull request number: {pr_number}')
+    pr_number = int(re.search("refs/pull/([0-9]+)/merge", github_ref).group(1))
+    print(f"Pull request number: {pr_number}")
 except AttributeError:
-    raise ValueError(f'The Pull request number could not be extracted from the GITHUB_REF = {github_ref}')
+    raise ValueError(
+        f"The Pull request number could not be extracted from the GITHUB_REF = {github_ref}"
+    )
 
 # Create a pull request object
 pr = repo.get_pull(pr_number)
@@ -59,66 +64,29 @@ pr = repo.get_pull(pr_number)
 # Get the pull request labels
 pr_labels = pr.get_labels()
 
-# Get the list of reviews
-pr_reviews = pr.get_reviews()
 
-# This is a list of valid label found in the pull request
-pr_valid_labels = []
+is_satisfied = True
 
-# Check which of the label in the pull request, are in the
-# list of valid labels
-for label in pr_labels:
-    if label.name in valid_labels:
-        pr_valid_labels.append(label.name)
 
-# Look for the last review done by this module. The variable
-# 'was_approved' will be set to True/False if the last review
-# done was approved/requested changes; if there was not a
-# previous review the variable will be set to 'None'.
-was_approved = None
-for review in pr_reviews.reversed:
-    # Reviews done by this modules uses a login name
-    # 'github-actions[bot]'
-    if review.user.login == 'github-actions[bot]':
-        if review.state == 'APPROVED':
-            # The last review was approved
-            was_approved = True
-        elif review.state == 'CHANGES_REQUESTED':
-            # The last review requested changes
-            was_approved = False
+def check_labels(pr_labels, required_labels_set):
+    splits = required_labels_set.split(",")
+    # This is a list of valid label found in the pull request
+    pr_valid_labels = []
 
-        # Break this loop after the last review is found.
-        # If no review was done, 'was_approved' will remain
-        # as 'None'.
-        break
+    # Check which of the label in the pull request, are in the
+    # list of valid labels
+    for label in pr_labels:
+        if label.name in splits:
+            pr_valid_labels.append(label.name)
 
-# Check if there were at least one valid label
-# Note: In both cases we exit without an error code and let the check to succeed. This is because GitHub
-# workflow will create different checks for different trigger conditions. So, adding a missing label won't
-# clear the initial failed check during the PR creation, for example.
-# Instead, we will create a pull request review, marked with 'REQUEST_CHANGES' when no valid label was found.
-# This will prevent merging the pull request until a valid label is added, which will trigger this check again
-# and will create a new pull request review, but in this case marked as 'APPROVE'
-# Note 2: We check for the status of the previous review done by this module. If a previous review exists, and
-# it state and the current state are the same, a new request won't be generated.
+    if len(pr_valid_labels) == 0:
+        print(f"lease add one of the following labels: `{required_labels_set}`")
+        is_satisfied = False
 
-if len(pr_valid_labels):
-    # If there were valid labels, create a pull request review, approving it
-    print(f'Success! This pull request contains the following valid labels: {pr_valid_labels}')
 
-    # If the last review done was approved, then don't approved it again
-    if was_approved == True:
-        print(f'The last review was already approved')
-    else:
-        pr.create_review(event = 'APPROVE')
-else:
-    # If there were not valid labels, then create a pull request review, requesting changes
-    print(f'Error! This pull request does not contain any of the valid labels: {valid_labels}')
+required_labels_sets = args.required_labels
+for required_labels_set in required_labels_sets:
+    check_labels(pr_labels, required_labels_sets)
 
-    # If the last review done requested changes, then don't request changes again
-    if was_approved == False:
-        print(f'The last review already requested changes')
-    else:
-        pr.create_review(body = 'This pull request does not contain a valid label. '
-                                f'Please add one of the following labels: `{valid_labels}`',
-                         event = 'REQUEST_CHANGES')
+if is_satisfied == False:
+    exit(-1)
