@@ -88,7 +88,7 @@ def check_labels(pr_labels, required_labels_set):
 
 required_labels_sets = args.required_labels
 for required_labels_set in required_labels_sets:
-    is_satisfied = is_satisfied and check_labels(pr_labels, required_labels_set)
+    is_satisfied = check_labels(pr_labels, required_labels_set) and is_satisfied
 
 if is_satisfied == False:
     raise ValueError("Check fails")
