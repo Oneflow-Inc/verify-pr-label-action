@@ -74,6 +74,7 @@ def check_labels(pr_labels, required_labels_set):
 
     # Check which of the label in the pull request, are in the
     # list of valid labels
+    print("checking presence:", splits)
     for label in pr_labels:
         if label.name in splits:
             pr_valid_labels.append(label.name)
