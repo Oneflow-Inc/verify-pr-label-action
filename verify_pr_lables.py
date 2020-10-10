@@ -42,9 +42,6 @@ token = args.github_token
 
 # Get the list of valid labels
 
-for s in required_labels_sets:
-    print(f"required at least one of: {s}")
-
 repo_name = get_env_var("GITHUB_REPOSITORY")
 github_ref = get_env_var("GITHUB_REF")
 repo = Github(token).get_repo(repo_name)
