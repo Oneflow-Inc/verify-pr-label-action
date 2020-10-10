@@ -82,7 +82,7 @@ def check_labels(pr_labels, required_labels_set):
     if len(pr_valid_labels):
         return True
     else:
-        print(f"at least add one of these labels: `{required_labels_set}`")
+        print(f"at least add one of these labels: `{splits}`")
         return False
 
 
