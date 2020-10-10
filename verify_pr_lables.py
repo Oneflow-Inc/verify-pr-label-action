@@ -79,7 +79,7 @@ def check_labels(pr_labels, required_labels_set):
             pr_valid_labels.append(label.name)
 
     if len(pr_valid_labels) == 0:
-        print(f"lease add one of the following labels: `{required_labels_set}`")
+        print(f"at least add one of the following labels: `{required_labels_set}`")
         is_satisfied = False
 
 
@@ -88,4 +88,4 @@ for required_labels_set in required_labels_sets:
     check_labels(pr_labels, required_labels_set)
 
 if is_satisfied == False:
-    exit(-1)
+    raise ValueError("Check fails")
