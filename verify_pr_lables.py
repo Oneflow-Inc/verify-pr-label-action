@@ -66,11 +66,9 @@ is_satisfied = True
 
 
 def check_labels(pr_labels, required_labels_set):
+    assert len(required_labels_set) == 1, len(required_labels_set)
+    splits = required_labels_set[0].split(",")
 
-    splits = []
-    for required_labels in required_labels_set:
-        for required_labels_str in required_labels:
-            splits += required_labels_str.split(",")
     # This is a list of valid label found in the pull request
     pr_valid_labels = []
 
@@ -87,7 +85,7 @@ def check_labels(pr_labels, required_labels_set):
 
 required_labels_sets = args.required_labels
 for required_labels_set in required_labels_sets:
-    check_labels(pr_labels, required_labels_sets)
+    check_labels(pr_labels, required_labels_set)
 
 if is_satisfied == False:
     exit(-1)
